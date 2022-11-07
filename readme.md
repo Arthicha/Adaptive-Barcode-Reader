@@ -5,7 +5,7 @@ This git repository provides an adaptive barcode detection and decoding function
 ## Method
 The flowchart of the provided example program is presented in the figure below. The "adaptive barcode detection and decoding" block denotes the "adaptive_read()" function imported from "barcode_reader.py".
 
-![Method](/method.png "Method")
+![](document/method.png "Method")
 
 
 # Installation 
@@ -49,32 +49,32 @@ code, intermediate_imgs = adaptive_read(img, imgsize=(<width>,<height>), detecti
 
 # Result
 **test1.jpg**
-![](/imgs/test1.jpg)
-![](/results/final/test1_result.jpg)
+![](imgs/test1.jpg)
+![](results/final/test1_result.jpg)
 **test2.jpg**
-![](/imgs/test2.jpg)
-![](/results/final/test2_result.jpg)
+![](imgs/test2.jpg)
+![](results/final/test2_result.jpg)
 **test3.jpg**
-![](/imgs/test3.jpg)
-![](/results/final/test3_result.jpg)
+![](imgs/test3.jpg)
+![](results/final/test3_result.jpg)
 **test4.jpg**
-![](/imgs/test4.jpg)
-![](/results/final/test4_result.jpg)
+![](imgs/test4.jpg)
+![](results/final/test4_result.jpg)
 **test5.jpg**
-![](/imgs/test5.jpg)
-![](/results/final/test5_result.jpg)
+![](imgs/test5.jpg)
+![](results/final/test5_result.jpg)
 **test6.jpg**
-![](/imgs/test6.jpg)
-![](/results/final/test6_result.jpg)
+![](imgs/test6.jpg)
+![](results/final/test6_result.jpg)
 **test7.jpg**
-![](/imgs/test7.jpg)
-![](/results/final/test7_result.jpg)
+![](imgs/test7.jpg)
+![](results/final/test7_result.jpg)
 **test8.jpg**
-![](/imgs/test8.jpg)
-![](/results/final/test8_result.jpg)
+![](imgs/test8.jpg)
+![](results/final/test8_result.jpg)
 **test9.jpg**
-![](/imgs/test9.jpg)
-![](/results/final/test9_result.jpg)
+![](imgs/test9.jpg)
+![](results/final/test9_result.jpg)
 
 # Reference
 This code is modified from [this git repository](https://github.com/pyxploiter/Barcode-Detection-and-Decoding).
