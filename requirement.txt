@@ -1,3 +1,4 @@
 python-barcode
 python-barcode[images]
 pyzbar
+grip

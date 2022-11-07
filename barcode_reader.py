@@ -4,11 +4,50 @@ barcode reader functions
 
 # import the necessary packages
 import numpy as np
-import argparse
+import argparse, sys
 import cv2
 from copy import deepcopy
 from pyzbar.pyzbar import decode
 
+# --------------------  detect and decode --------------------
+def adaptive_read(img,imgsize=(4000,3000),detectionparams=(13,10,200),binarizationparams=(10,20,101)):
+	'''
+	Perform adaptive barcode detection and decoding
+	input:
+		1. img (opencv array): an image of an arbitrary size
+		2. imgsize (tuple (w,h)): the desired size (width,height)
+		3. detectionparams (tuple (k,dk,kmax)): the adaptive detection parameters
+			- k (int): initial morphological transformation kirnel size
+			- dk (int): morphological transformation kirnel step size
+			- kmax (int): maximum morphological transformation kirnel step size
+		4. binarizationparams (tuble (th,dth,thmax)): adaptive binarization parameters
+			- th (int): initial threshold
+			- dth (int): threshold step
+			- thmax (int): maximum threshold
+	output: 
+		1. code (string): barcode data
+		2. intermidiate_imgs (list of images): intermediate images
+	'''
+	img = cv2.resize(img,imgsize, interpolation = cv2.INTER_CUBIC)
+
+	found = False
+	for kernelsize in range(detectionparams[0],detectionparams[2],detectionparams[1]): # adaptive loop
+		try : 			
+			barcode, coord, imgs, rect = bardetect(img,kernelsize=kernelsize) # barcode detection
+			code, thresholded_code = bardecode(barcode,thinit=binarizationparams[0],thmax=binarizationparams[2],thstep=binarizationparams[1]) # barcode decoding (rise an error if decoding fails)
+			found = True
+			break
+		except:
+			pass
+
+	if found:
+		imgs.append(thresholded_code)
+		cv2.drawContours(img, [rect], -1, (0, 0, 255), 5)
+		img = cv2.putText(img, str(code)[2:-1], (0.9*np.array(coord)).astype(int), cv2.FONT_HERSHEY_SIMPLEX,int(5), (255,255, 255), int(50), cv2.LINE_AA)
+		img = cv2.putText(img, str(code)[2:-1], (0.9*np.array(coord)).astype(int), cv2.FONT_HERSHEY_SIMPLEX,int(5), (0, 0, 255), int(10), cv2.LINE_AA)
+		imgs.append(img)
+	intermidiate_imgs = imgs
+	return code, intermidiate_imgs
 
 # --------------------  warp transform --------------------
 def order_points(pts):
@@ -65,27 +104,23 @@ def four_point_transform(image, pts):
 	return warped
 
 # --------------------  barcode decoder --------------------
-def bardecode(image):
+def bardecode(image,thinit=10,thmax=101,thstep=20):
 	detectedBarcodes = []
 	gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-	for th in range(254,10,-10):
-		(_, thresh) = cv2.threshold(gray, th, 255, cv2.THRESH_BINARY)
-		#cv2.imshow("th"+str(th), thresh)
+	for th in range(thinit,thmax,thstep):
+		thresh = cv2.adaptiveThreshold(gray,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,th+1,2)
 		detectedBarcodes = decode(thresh)
-
 		if detectedBarcodes != []:
 			break
+
 	for barcode in detectedBarcodes:
-		(x, y, w, h) = barcode.rect
-		cv2.rectangle(thresh, (x, y), (x + w, y + h), (255, 0, 0), 5)
-	  
 		return barcode.data, thresh
 
 # --------------------  barcode detector --------------------
-def bardetect(image):
+def bardetect(org_image,kernelsize=13):
 	output_images = []
 	#resize image
-	image = cv2.resize(image,None,fx=0.7, fy=0.7, interpolation = cv2.INTER_CUBIC)
+	image = deepcopy(org_image)
 
 	#convert to grayscale
 	gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -106,12 +141,13 @@ def bardetect(image):
 	output_images.append(thresh)
 
 	# construct a closing kernel and apply it to the thresholded image
-	kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (13,5))#(21, 7))
+	kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (kernelsize,5))#(21, 7))
 	closed = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel)
-
 	# perform a series of erosions and dilations
-	closed = cv2.erode(closed, None, iterations = 4)
-	closed = cv2.dilate(closed, None, iterations = 4)
+	kernel2 = cv2.getStructuringElement(cv2.MORPH_RECT, (int(kernelsize/2),5))
+	closed = cv2.erode(closed, kernel2)
+	closed = cv2.dilate(closed, kernel2)
+	closed = cv2.erode(closed, kernel2)
 	output_images.append(closed)
 
 	# find the contours in the thresholded image, then sort the contours
@@ -129,9 +165,7 @@ def bardetect(image):
 	imagedetected = deepcopy(image)
 	cv2.drawContours(imagedetected, [box], -1, (0, 255, 0), 3)
 	output_images.append(imagedetected)
-
-	barcode = four_point_transform(image,box)
-	barcode = cv2.resize(barcode,None, fx=5, fy=5, interpolation = cv2.INTER_CUBIC)
+	barcode = four_point_transform(org_image,box)
+	barcode = cv2.resize(barcode,None,fx=0.5, fy=0.5, interpolation = cv2.INTER_CUBIC)
 	output_images.append(barcode)
-
-	return barcode, coord, output_images
+	return barcode, coord, output_images, box
