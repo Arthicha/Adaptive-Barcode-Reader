@@ -31,6 +31,8 @@ def adaptive_read(img,imgsize=(4000,3000),detectionparams=(13,10,200),binarizati
 	img = cv2.resize(img,imgsize, interpolation = cv2.INTER_CUBIC)
 
 	found = False
+	code = None
+	imgs = []
 	for kernelsize in range(detectionparams[0],detectionparams[2],detectionparams[1]): # adaptive loop
 		try : 			
 			barcode, coord, imgs, rect = bardetect(img,kernelsize=kernelsize) # barcode detection
